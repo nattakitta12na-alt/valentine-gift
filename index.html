@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Our Valentine Mission</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* --- ตั้งค่าพื้นฐาน --- */
+        body {
+            margin: 0; padding: 0; background-color: #fff5f5;
+            font-family: 'Kanit', sans-serif; overflow: hidden; height: 100vh;
+            display: flex; justify-content: center; align-items: center; color: #333;
+            touch-action: none;
+        }
+        .card-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 90%; max-width: 380px; padding: 20px; text-align: center; position: relative;
+            max-height: 95vh; overflow-y: auto; z-index: 10;
+        }
+        .card-container::-webkit-scrollbar { display: none; }
+        
+        .page { display: none; animation: slideUp 0.6s; }
+        #page1 { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Text & Buttons */
+        h1 { color: #d32f2f; margin: 5px 0; font-size: 20px; }
+        p { font-size: 14px; line-height: 1.4; color: #555; margin: 5px 0; }
+        .btn-next {
+            background: linear-gradient(45deg, #d32f2f, #ff6666); color: white; border: none;
+            padding: 10px 25px; border-radius: 50px; font-size: 16px; cursor: pointer;
+            margin-top: 10px; width: 80%; box-shadow: 0 4px 10px rgba(211, 47, 47, 0.3);
+        }
+
+        /* Images & Themes */
+        .profile-img { width: 70px; height: 70px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: cover; }
+        .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+        .photo-item { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 10px; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .takina-theme { background: linear-gradient(to bottom, #cce5ff, #e6f2ff); color: #004ba0; padding: 8px; border-radius: 10px; }
+        .chisato-theme { background: linear-gradient(to bottom, #ffcccc, #ffe6e6); color: #c62828; padding: 8px; border-radius: 10px; margin-bottom: 8px;}
+
+        /* --- 🔫 Gun Styles (SVG) --- */
+        #gun-interaction-container {
+            position: relative; width: 100%; height: 140px; margin-top: 20px; background: #ffe6e6; border-radius: 15px;
+            overflow: hidden; border: 2px solid #d32f2f;
+        }
+        /* ปรับตำแหน่งปืน SVG */
+        #gun-svg { 
+            position: absolute; left: 10px; top: 50%; transform: translateY(-50%); 
+            width: 140px; height: auto; pointer-events: none; 
+            filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.3));
+        }
+        #bullet-heart { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px; cursor: grab; z-index: 20; touch-action: none; }
+        #drop-zone { position: absolute; left: 60px; top: 30px; width: 50px; height: 80px; z-index: 5; }
+        .load-success { animation: loadIn 0.5s forwards; }
+        @keyframes loadIn { to { transform: translate(-100px, -50%) scale(0); opacity: 0; } }
+
+        /* --- 🧩 Jigsaw Styles --- */
+        #puzzle-grid-slots {
+            width: 280px; height: 280px; margin: 5px auto;
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+            border: 2px dashed #d32f2f; background: #fff0f0; border-radius: 5px;
+        }
+        .grid-slot { width: 100%; height: 100%; border: 1px solid #ffcccc; box-sizing: border-box; }
+        #puzzle-pieces-pool {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
+            margin-top: 10px; padding: 5px; background: #f9f9f9; border-radius: 10px; min-height: 95px;
+        }
+        .puzzle-piece {
+            width: 85px; height: 85px;
+            background-image: url('puzzle.png'); 
+            background-size: 280px 280px; cursor: pointer; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .placed-piece { width: 100%; height: 100%; border-radius: 0; box-shadow: none; }
+        .selected-in-pool { border: 3px solid yellow; transform: scale(1.05); z-index: 10; }
+        #puzzle-finish-btn { display: none; background: #28a745; box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3); animation: pulse 1s infinite; margin-top: 10px;}
+
+        /* --- 💣 Explosion Button --- */
+        .explode-btn {
+            width: 150px; height: 150px; border-radius: 50%;
+            background: radial-gradient(circle, #ff4d4d, #d32f2f);
+            color: white; font-size: 20px; font-weight: bold; border: 5px solid #ffcccc;
+            box-shadow: 0 0 20px rgba(211, 47, 47, 0.6);
+            cursor: pointer; animation: heartbeat 1.5s infinite;
+            margin-top: 20px; transition: transform 0.1s;
+        }
+        .explode-btn:active { transform: scale(0.9); }
+        @keyframes heartbeat { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        /* Particle Effects */
+        .particle { position: fixed; pointer-events: none; z-index: 9999; font-size: 20px; animation: flyOut 1s ease-out forwards; }
+        @keyframes flyOut { to { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; } }
+
+        .heart-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .heart { position: absolute; bottom: -10px; color: #ffcccc; font-size: 20px; animation: floatUp 10s linear infinite; }
+        @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <audio id="bgm" loop><source src="song.mp3" type="audio/mpeg"></audio>
+    <div class="heart-bg" id="heart-container"></div>
+
+    <div class="card-container">
+        
+        <div id="page1" class="page">
+            <h1>LycoReco Mission 💌</h1>
+            <img src="https://media1.tenor.com/m/XyC4kO-rQyIAAAAC/chisato-nishikigi-lycoris-recoil.gif" style="width:100%; border-radius:15px; margin-bottom:5px;">
+            <p style="font-size: 12px; color: #888;">(เปิดเสียงเพื่อเริ่มภารกิจ)</p>
+            <button class="btn-next" onclick="goToPage(2)">🚀 Start Mission</button>
+        </div>
+
+        <div id="page2" class="page">
+            <h1>The Perfect Duo ❤️💙</h1>
+            <div class="chisato-theme"><img src="https://ih1.redbubble.net/image.3860315802.9944/bg,f8f8f8-flat,750x,075,f-pad,750x1000,f8f8f8.jpg" class="profile-img"><p><b>เธอ = จิซาโตะ</b><br>สดใส พลังบวก ยิ้มเก่ง</p></div>
+            <div class="takina-theme"><img src="https://cdn.rafled.com/anime-icons/images/FW3qvq0rolDDnECKfAQ4zqJlH1Wm2fBn.jpg" class="profile-img"><p><b>เค้า = ทาคินะ</b><br>จริงจัง แต่ยอมเธอคนเดียว</p></div>
+            <button class="btn-next" style="background:#0056b3;" onclick="goToPage(3)">ดูความทรงจำของเรา 📸</button>
+        </div>
+
+        <div id="page3" class="page">
+            <h1>Our Memories ✨</h1>
+            <p>เก็บรวบรวมช่วงเวลาดีๆ ของเรา</p>
+            <div class="photo-grid">
+                <img src="1.JPG" class="photo-item"><img src="2.JPG" class="photo-item"><img src="3.JPG" class="photo-item">
+                <img src="4.JPG" class="photo-item"><img src="5.JPG" class="photo-item"><img src="6.JPG" class="photo-item">
+            </div>
+            <button class="btn-next" onclick="goToPage(4)">🔫 Mission 1: Reload Heart</button>
+        </div>
+
+        <div id="page4" class="page">
+            <h1>Mission 1: Reload ❤️</h1>
+            <p>เติมกระสุนหัวใจให้หน่อย...<br>ลากหัวใจด้านขวา ใส่ปืนด้านซ้าย</p>
+            <div id="gun-interaction-container">
+                
+                <svg id="gun-svg" viewBox="0 0 100 60" fill="#444" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="10" width="60" height="15" rx="2" fill="#333"/>
+                    <rect x="10" y="25" width="40" height="5" fill="#555"/>
+                    <path d="M15 25 L10 50 L35 55 L40 30 Z" fill="#222"/>
+                    <path d="M35 25 Q 40 35 45 25" stroke="#333" stroke-width="2" fill="none"/>
+                    <path d="M16 28 L12 48 L32 52 L36 32 Z" fill="#5c2b2b"/>
+                    <rect x="65" y="8" width="5" height="2" fill="#333"/>
+                </svg>
+
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/Heart_coraz%C3%B3n.svg/1200px-Heart_coraz%C3%B3n.svg.png" id="bullet-heart" alt="heart">
+                
+                <div id="drop-zone"></div>
+            </div>
+        </div>
+
+        <div id="page5" class="page">
+            <h1>Mission 2: Repair ✨</h1>
+            <p>เก่งมาก! ภารกิจต่อไป...<br>ช่วยซ่อมแซมภาพของเราให้สมบูรณ์ที</p>
+            <div id="puzzle-grid-slots"></div>
+            <div id="puzzle-pieces-pool"></div>
+            <button id="puzzle-finish-btn" class="btn-next" onclick="goToPage(6)">🎉 สำเร็จ! รับรางวัล</button>
+        </div>
+
+        <div id="page6" class="page">
+            <h1>Final Reward! 🎁</h1>
+            <p>ภารกิจครบถ้วนแล้ว!<br>กดปุ่มเพื่อรับความรักทั้งหมดที่มี</p>
+            <button class="explode-btn" onclick="triggerExplosion()">💥<br>PRESS<br>TO EXPLODE</button>
+            <p style="font-size:12px; color:#d32f2f; margin-top:10px;">(ระวังแรงกระแทกจากความรัก!)</p>
+        </div>
+
+        <div id="page7" class="page">
+            <h1>Happy Valentine's!</h1>
+            <img src="https://media.tenor.com/images/1cfa9760773d72223a51693766782c58/tenor.gif" style="width:80px; border-radius:50%; margin:10px 0;">
+            <div style="background:#fff0f0; padding:15px; border-radius:10px; border:2px dashed #d32f2f;">
+                "ขอบคุณที่เป็นจิซาโตะที่น่ารักของเค้า<br>
+                ดีใจมากๆ ที่ได้มาเจอ <br>
+                อยู่เป็นคู่หูแบบนี้ไปนานๆ นะ <br>
+                <b>รักนะ! ❤️💙"</b>
+            </div>
+            <br>
+            <button class="btn-next" onclick="alert('รักที่สุดเลยค้าบบบ! 🥰')">รับทราบภารกิจ!</button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- เปลี่ยนหน้า ---
+        function goToPage(pageNum) {
+            for(let i=1; i<=7; i++) { document.getElementById('page'+i).style.display = 'none'; }
+            document.getElementById('page'+pageNum).style.display = 'block';
+            if (pageNum === 2) { var audio = document.getElementById("bgm"); audio.volume = 0.5; audio.play().catch(e => console.log(e)); }
+            if (pageNum === 4) { initDragAndDrop(); }
+            if (pageNum === 5 && !isPuzzleStarted) { initPuzzle(); }
+        }
+
+        // --- 💣 Explosion ---
+        function triggerExplosion() {
+            for (let i = 0; i < 50; i++) { createParticle(); }
+            document.body.style.transform = "translate(2px, 2px)";
+            setTimeout(() => { document.body.style.transform = "translate(-2px, -2px)"; }, 50);
+            setTimeout(() => { document.body.style.transform = "translate(0, 0)"; }, 100);
+            setTimeout(() => { goToPage(7); }, 2000);
+        }
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.innerText = ['❤️','💖','💙','✨','💥'][Math.floor(Math.random()*5)];
+            particle.className = 'particle';
+            const startX = window.innerWidth / 2; const startY = window.innerHeight / 2;
+            particle.style.left = startX + 'px'; particle.style.top = startY + 'px';
+            const angle = Math.random() * Math.PI * 2; const velocity = Math.random() * 300 + 100;
+            particle.style.setProperty('--tx', Math.cos(angle) * velocity + 'px');
+            particle.style.setProperty('--ty', Math.sin(angle) * velocity + 'px');
+            particle.style.fontSize = Math.random() * 20 + 20 + 'px';
+            document.body.appendChild(particle);
+            setTimeout(() => { particle.remove(); }, 1000);
+        }
+
+        // --- ❤️ Background ---
+        function createHearts() {
+            const container = document.getElementById('heart-container');
+            for(let i=0; i<15; i++) {
+                let heart = document.createElement('div'); heart.className = 'heart';
+                heart.innerText = ['❤️','💖','💙','✨'][Math.floor(Math.random()*4)];
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.animationDuration = (Math.random() * 5 + 5) + 's';
+                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                container.appendChild(heart);
+            }
+        }
+        createHearts();
+
+        // --- 🔫 Gun Logic ---
+        function initDragAndDrop() {
+            const bullet = document.getElementById('bullet-heart');
+            const dropZone = document.getElementById('drop-zone');
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+            function startDrag(e) {
+                isDragging = true; bullet.style.cursor = 'grabbing';
+                let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                startX = clientX; startY = clientY; initialLeft = bullet.offsetLeft; initialTop = bullet.offsetTop;
+            }
+            function drag(e) {
+                if (!isDragging) return; e.preventDefault();
+                let clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+                let clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
+                bullet.style.left = initialLeft + (clientX - startX) + 'px'; bullet.style.top = initialTop + (clientY - startY) + 'px';
+            }
+            function stopDrag(e) {
+                if (!isDragging) return; isDragging = false; bullet.style.cursor = 'grab';
+                const bulletRect = bullet.getBoundingClientRect(); const dropRect = dropZone.getBoundingClientRect();
+                if (bulletRect.left < dropRect.right && bulletRect.right > dropRect.left &&
+                    bulletRect.top < dropRect.bottom && bulletRect.bottom > dropRect.top) {
+                    bullet.classList.add('load-success');
+                    setTimeout(() => { goToPage(5); }, 500);
+                } else {
+                    bullet.style.left = initialLeft + 'px'; bullet.style.top = initialTop + 'px';
+                }
+            }
+            bullet.addEventListener('mousedown', startDrag); bullet.addEventListener('touchstart', startDrag);
+            document.addEventListener('mousemove', drag); document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('mouseup', stopDrag); document.addEventListener('touchend', stopDrag);
+        }
+
+        // --- 🧩 Puzzle Logic ---
+        let isPuzzleStarted = false; let correctSolution = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+        let gridState = [null, null, null, null, null, null, null, null, null];
+        let poolPieces = []; let selectedPoolIndex = null;
+        function initPuzzle() { isPuzzleStarted = true; poolPieces = [...correctSolution].sort(() => Math.random() - 0.5); renderGame(); }
+        function renderGame() {
+            const slotsContainer = document.getElementById('puzzle-grid-slots'); const poolContainer = document.getElementById('puzzle-pieces-pool');
+            slotsContainer.innerHTML = ''; poolContainer.innerHTML = '';
+            gridState.forEach((pieceIndex, slotIndex) => {
+                let slotDiv = document.createElement('div'); slotDiv.className = 'grid-slot';
+                if (pieceIndex !== null) {
+                    let pieceDiv = createPieceDiv(pieceIndex); pieceDiv.classList.add('placed-piece');
+                    pieceDiv.onclick = () => returnToPool(slotIndex); slotDiv.appendChild(pieceDiv);
+                } else { slotDiv.onclick = () => placePieceInSlot(slotIndex); }
+                slotsContainer.appendChild(slotDiv);
+            });
+            poolPieces.forEach((pieceIndex, poolIndex) => {
+                let pieceDiv = createPieceDiv(pieceIndex);
+                if (poolIndex === selectedPoolIndex) pieceDiv.classList.add('selected-in-pool');
+                pieceDiv.onclick = () => selectPoolPiece(poolIndex); poolContainer.appendChild(pieceDiv);
+            });
+            checkWin();
+        }
+        function createPieceDiv(pieceIndex) {
+            let pieceDiv = document.createElement('div'); pieceDiv.className = 'puzzle-piece';
+            let row = Math.floor(pieceIndex / 3); let col = pieceIndex % 3;
+            pieceDiv.style.backgroundPosition = `-${col * (280/3)}px -${row * (280/3)}px`; 
+            return pieceDiv;
+        }
+        function selectPoolPiece(index) { selectedPoolIndex = index; renderGame(); }
+        function placePieceInSlot(slotIndex) {
+            if (selectedPoolIndex !== null) { gridState[slotIndex] = poolPieces[selectedPoolIndex]; poolPieces.splice(selectedPoolIndex, 1); selectedPoolIndex = null; renderGame(); }
+        }
+        function returnToPool(slotIndex) { poolPieces.push(gridState[slotIndex]); gridState[slotIndex] = null; renderGame(); }
+        function checkWin() {
+            if (poolPieces.length === 0 && JSON.stringify(gridState) === JSON.stringify(correctSolution)) {
+                 document.getElementById('puzzle-finish-btn').style.display = 'block';
+                 document.getElementById('puzzle-grid-slots').style.pointerEvents = 'none';
+                 document.getElementById('puzzle-pieces-pool').style.display = 'none';
+                 document.getElementById('puzzle-grid-slots').style.border = '3px solid #28a745';
+            }
+        }
+    </script>
+</body>
+</html>
